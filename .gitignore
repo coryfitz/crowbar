@@ -1,0 +1,6 @@
+/dist
+/venv
+/build
+crowbar/__pycache__
+/crowbar.egg-info
+.DS_Store
