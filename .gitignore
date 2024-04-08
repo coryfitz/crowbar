@@ -4,3 +4,4 @@
 crowbar/__pycache__
 /crowbar.egg-info
 .DS_Store
+/crowbar_package_manager.egg-info
