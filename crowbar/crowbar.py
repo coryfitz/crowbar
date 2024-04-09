@@ -2,14 +2,20 @@ import argparse
 import os
 import subprocess
 import sys
-import venv
 
-def get_venv_bin_path(venv_path):
-    """Return the path to the virtual environment's bin/Scripts directory."""
-    if os.name == 'nt':  # Windows
-        return os.path.join(venv_path, 'Scripts')
-    else:  # Unix-like
-        return os.path.join(venv_path, 'bin')
+def is_conda_environment():
+    return 'CONDA_DEFAULT_ENV' in os.environ or 'CONDA_PREFIX' in os.environ
+
+def get_conda_executable():
+    """Attempts to find the 'conda' command in known directories or in the system path."""
+    conda_executable = 'conda'  # Default to using conda in path
+    # Specified by Conda on activation
+    if 'CONDA_EXE' in os.environ:
+        conda_executable = os.environ['CONDA_EXE']
+    elif 'CONDA_PREFIX' in os.environ:
+        # Construct a path to conda based on the active environment
+        conda_executable = os.path.join(os.environ['CONDA_PREFIX'], 'condabin', 'conda')
+    return conda_executable
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Crowbar Package Manager')
@@ -30,57 +36,100 @@ def parse_arguments():
 
     return parser.parse_args()
 
-def create_venv_if_not_exists():
-    venv_path = 'venv'
-    if not os.path.isdir(venv_path):
-        print("Creating virtual environment...")
-        venv.create(venv_path, with_pip=True)
-    return venv_path
+def create_conda_environment(env_name):
+        conda_prefix = os.environ['CONDA_PREFIX']
+        # Construct the command to create a new Conda environment
+        command = f"{os.path.join(conda_prefix, 'condabin', 'conda')} create --name {env_name} --yes"
+        subprocess.run(command, shell=True)
 
-def activate_venv_and_install_package(venv_path, package_name):
-    # Note: Directly use the venv's pip to install packages, as activating a venv doesn't carry over to the user's shell.
-    pip_path = os.path.join(venv_path, 'bin', 'pip')  # Adjust this path for Windows compatibility if necessary
-    subprocess.run([pip_path, 'install', package_name])
+def create_env_if_not_exists():
+    env_name = 'conda_env' if is_conda_environment() else 'venv'
+    
+    if is_conda_environment():
+        # Check if the Conda environment already exists
+        conda_executable = get_conda_executable()
+        check_env = subprocess.run([conda_executable, 'env', 'list'], capture_output=True, text=True)
+        if env_name not in check_env.stdout:
+            print(f"Creating Conda environment named {env_name}...")
+            subprocess.run([conda_executable, 'create', '--name', env_name, '--yes'], check=True)
+        else:
+            print(f"Conda environment named {env_name} already exists.")
+    else:
+        if not os.path.isdir(env_name):
+            print(f"Creating environment named {env_name}...")
+            subprocess.run([sys.executable, '-m', 'venv', env_name], check=True)
+        else:
+            print(f"Environment named {env_name} already exists.")
+    
+    return env_name
 
-def uninstall_package(venv_path, package_name):
-    pip_path = os.path.join(venv_path, 'bin', 'pip')  # Adjust this path for Windows compatibility if necessary
-    subprocess.run([pip_path, 'uninstall', package_name, '-y'])  # The '-y' flag auto-confirms uninstallation
+def uninstall_package(env_name, package_name):
+    if is_conda_environment():
+        conda_executable = get_conda_executable()
+        # Uninstall a package with Conda
+        print(f"Uninstalling {package_name} from Conda environment {env_name}...")
+        subprocess.run([conda_executable, 'remove', '--name', env_name, package_name, '--yes'], check=True)
+    else:
+        pip_path = os.path.join(env_name, 'Scripts', 'pip') if os.name == 'nt' else os.path.join(env_name, 'bin', 'pip')
+        # Uninstall a package with pip
+        print(f"Uninstalling {package_name} from environment {env_name}...")
+        subprocess.run([pip_path, 'uninstall', package_name, '-y'], check=True)  # The '-y' flag auto-confirms uninstallation
 
-def run_python_script(venv_path, script_name):
+def run_python_script(env_name, script_name):
     if not os.path.isfile(script_name):
         print(f"Error: The file {script_name} does not exist.")
         sys.exit(1)
     
-    python_executable = os.path.join(venv_path, 'bin', 'python')  # Adjust for Windows if necessary
+    # Determine the correct path for the Python executable
+    if os.name == 'nt':  # Windows
+        # Adjusting for both Conda and venv paths on Windows
+        python_executable = os.path.join(env_name, 'Scripts', 'python.exe')
+    else:  # Unix-like (Linux, macOS)
+        python_executable = os.path.join(env_name, 'bin', 'python')
+    
+    # Check if the executable exists
+    if not os.path.exists(python_executable):
+        print(f"Error: Python executable not found at {python_executable}.")
+        sys.exit(1)
+    
+    print(f"Running {script_name} using {python_executable}...")
     subprocess.run([python_executable, script_name])
 
-def update_requirements(venv_path):
-    pip_path = os.path.join(get_venv_bin_path(venv_path), 'pip')
-    try:
-        # Ensure we're using the correct pip by specifying the full path
-        freeze_output = subprocess.check_output([pip_path, 'freeze'], text=True)
-        with open("requirements.txt", "w") as req_file:
-            req_file.write(freeze_output)
-    except subprocess.CalledProcessError as e:
-        print(f"Error updating requirements.txt: {e}")
-
-def install_packages(venv_path, package_name=None):
-    pip_path = os.path.join(get_venv_bin_path(venv_path), 'pip')
-    if package_name:
-        # Install a specific package
-        subprocess.run([pip_path, 'install', package_name])
-    else:
-        # Install from requirements.txt
-        requirements_path = os.path.join(os.getcwd(), 'requirements.txt')
-        if os.path.exists(requirements_path):
-            subprocess.run([pip_path, 'install', '-r', requirements_path])
+def install_packages(env_name, package_name=None):
+    if is_conda_environment():
+        conda_executable = get_conda_executable()
+        if package_name:
+            subprocess.run([conda_executable, 'install', '--name', env_name, package_name, '--yes'], check=True)
         else:
-            print("requirements.txt not found.")
+            requirements_path = os.path.join(os.getcwd(), 'requirements.txt')
+            if os.path.exists(requirements_path):
+                subprocess.run([conda_executable, 'install', '--name', env_name, '--file', requirements_path, '--yes'], check=True)
+            else:
+                print("requirements.txt not found.")
+    else:
+        pip_path = os.path.join(env_name, 'Scripts', 'pip') if os.name == 'nt' else os.path.join(env_name, 'bin', 'pip')
+        if package_name:
+            subprocess.run([pip_path, 'install', package_name], check=True)
+        else:
+            requirements_path = os.path.join(os.getcwd(), 'requirements.txt')
+            if os.path.exists(requirements_path):
+                subprocess.run([pip_path, 'install', '-r', requirements_path], check=True)
+            else:
+                print("requirements.txt not found.")
+
+def update_requirements(env_name):
+    if is_conda_environment():
+        conda_executable = get_conda_executable()
+        # Using conda list to export the package list, which is not directly equivalent to pip freeze
+        subprocess.run([conda_executable, 'list', '--name', env_name, '--export'], stdout=open('requirements.txt', 'w'), check=True)
+    else:
+        pip_path = os.path.join(env_name, 'Scripts', 'pip') if os.name == 'nt' else os.path.join(env_name, 'bin', 'pip')
+        subprocess.run([pip_path, 'freeze'], stdout=open('requirements.txt', 'w'), check=True)
 
 def main():
     args = parse_arguments()
     
-    venv_path = create_venv_if_not_exists()
+    venv_path = create_env_if_not_exists()
     
     if args.command == 'install':
         if args.package_name:
