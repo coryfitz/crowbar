@@ -6,7 +6,7 @@ with open('README.md', 'r', encoding='utf-8') as f:
 
 setup(
     name='crowbar_package_manager',
-    version='0.1.4',
+    version='0.1.8',
     packages=find_packages(),
     install_requires=[],
     entry_points={
@@ -15,6 +15,7 @@ setup(
             'cb=crowbar:main',
         ],
     },
+    description = 'a local-first tool for managing python dependencies with pip',
     long_description=long_description,
     long_description_content_type='text/markdown',  # This line is important for Markdown rendering on PyPI
 )
