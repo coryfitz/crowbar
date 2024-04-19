@@ -6,7 +6,7 @@ with open('README.md', 'r', encoding='utf-8') as f:
 
 setup(
     name='crowbar_package_manager',
-    version='0.1.8',
+    version='0.1.9',
     packages=find_packages(),
     install_requires=[],
     entry_points={

@@ -28,6 +28,8 @@ crowbar run <file_name>.py
 
 Warning – you may have pip muscle memory which may cause you to accidentally install globally. Use crowbar/cb and not pip if you are not in an active virtual environment.
 
+<br>
+
 ### global flag
 
 ```
@@ -38,6 +40,28 @@ cb -g uninstall <package_name>
 ```
 -installs or uninstalls a package globally
 
-### conda support
+<br>
 
-Crowbar supports python and will create an environment called conda_env instead of venv if it detects that it is within a conda environment.
+### running package commands
+
+With the crowbar command you can run any commands installed in the virtual environment.
+
+Example - starting a new Django project:
+
+```
+cb django-admin startproject django_project .
+```
+
+Use ```crowbar run``` to run any commands surfaced by files within your Python program.
+
+Example - running the Django development server:
+
+```
+cb run manage.py runserver
+```
+
+<br>
+
+### package managers other than pip
+
+Crowbar does not support Conda. Crowbar has plans to support UV eventually.
