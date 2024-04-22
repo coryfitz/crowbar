@@ -26,6 +26,11 @@ crowbar run <file_name>.py
 ```
 -Runs a python file using the contents of the local venv
 
+```
+crowbar name <environment name>
+```
+-Changes the name of the environment folder that crowbar creates (venv is the default)
+
 Warning – you may have pip muscle memory which may cause you to accidentally install globally. Use crowbar/cb and not pip if you are not in an active virtual environment.
 
 <br>

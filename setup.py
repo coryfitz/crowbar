@@ -1,14 +1,13 @@
 from setuptools import setup, find_packages
 
-# Read the contents of your README file
 with open('README.md', 'r', encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
     name='crowbar_package_manager',
-    version='0.1.9',
+    version='0.1.10',
     packages=find_packages(),
-    install_requires=[],
+    install_requires=['toml'],
     entry_points={
         'console_scripts': [
             'crowbar=crowbar:main',
@@ -17,5 +16,5 @@ setup(
     },
     description = 'a local-first tool for managing python dependencies with pip',
     long_description=long_description,
-    long_description_content_type='text/markdown',  # This line is important for Markdown rendering on PyPI
+    long_description_content_type='text/markdown',
 )
