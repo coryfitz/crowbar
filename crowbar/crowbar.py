@@ -109,11 +109,25 @@ def main():
     config = load_config()
     env_name = config.get('env_name', 'venv')
 
+    # To avoid creating a venv if cwd is in a subdirectory
+    if args.command == 'install' and not args.remainder:
+        to_reset = False
+        if env_directory is None:
+            env_directory = os.getcwd()
+            to_reset = True
+        requirements_path = os.path.join(env_directory, 'requirements.txt')
+        if not os.path.exists(requirements_path):
+            print("No packages specified and requirements.txt not found.")
+            sys.exit(1)
+        if to_reset:
+            env_directory = None
+
     if env_directory is None:
         create_env_if_not_exists(env_name)
         env_directory = os.getcwd()
+        print(f"Created environment {env_name} at {env_directory}")
     else:
-        print(f"Using virtual environment: {env_name}")
+        print(f"Using environment {env_name} at {env_directory}")
 
     if args.command == 'install':
         install_packages(env_directory, env_name, args.remainder, args.global_run)
