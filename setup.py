@@ -7,7 +7,7 @@ setup(
     name='crowbar_package_manager',
     version='0.1.10',
     packages=find_packages(),
-    install_requires=['toml'],
+    install_requires=['toml', 'appdirs'],
     entry_points={
         'console_scripts': [
             'crowbar=crowbar:main',
