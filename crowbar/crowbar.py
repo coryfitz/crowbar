@@ -16,7 +16,7 @@ def load_config():
     config_dir = appdirs.user_data_dir(appname='crowbar', appauthor=False)
     config_path = os.path.join(config_dir, 'cbconfig.toml')
     if not os.path.exists(config_path):
-        return {'env_name': 'venv'}
+        return {'env_name': 'venv', 'gitignore': False}
     with open(config_path, 'r') as config_file:
         return toml.load(config_file)
 
@@ -43,11 +43,31 @@ def find_virtual_environment_directory():
     finally:
         os.chdir(original_dir)
 
-def create_env_if_not_exists(env_name):
+def check_current_directory():
+    config = load_config()
+    env_name = config.get('env_name', 'venv')
+    return os.path.isdir(env_name)
+
+def update_gitignore(dir_name):
+    current_dir = os.getcwd()
+    gitignore_path = os.path.join(current_dir, '.gitignore')
+    if os.path.exists(gitignore_path):
+        with open(gitignore_path, 'r+') as file:
+            contents = file.read()
+            if dir_name not in contents.splitlines():
+                file.write(f'\n{dir_name}')
+                print(f"Added '{dir_name}' to {gitignore_path}")
+    else:
+        with open(gitignore_path, 'w') as file:
+            file.write(f'{dir_name}\n')
+            print(f"Created {gitignore_path} and added '{dir_name}'")
+
+def create_env_if_not_exists(env_name, gitignore_status):
     if not os.path.isdir(env_name):
-        print(f"Creating environment named {env_name}...")
+        print(f"Creating environment named {env_name}.")
         subprocess.run([sys.executable, '-m', 'venv', env_name], check=True)
-    return env_name
+        if gitignore_status:
+            update_gitignore(env_name)
 
 def run_external_command(env_directory, env_name, command, args, global_run):
     env_path = os.path.join(env_directory, env_name)
@@ -59,7 +79,7 @@ def run_external_command(env_directory, env_name, command, args, global_run):
             subprocess.run([command_path] + args)
         else:
             python_executable = os.path.join(env_name, 'Scripts', 'python.exe') if os.name == 'nt' else os.path.join(env_path, 'bin', 'python')
-            if command.endswith('.py') or command == 'django-admin':
+            if command.endswith('.py'):
                 subprocess.run([python_executable, command] + args)
             else:
                 print(f"Command {command} not found.")
@@ -101,13 +121,65 @@ def main():
         config = load_config()
         config['env_name'] = new_name
         save_config(config)
-        print(f"Environment name changed to {new_name}")
-        return 
+        print(f'Default environment name changed to {new_name}')
+        return
+    
+    if args.command == 'show' and args.remainder[0] == 'name':
+        config = load_config()
+        try:
+            print(f'Environment name: {config["env_name"]}')
+        except:
+            print('Environment name: venv')
+        return
+    
+    if args.command == 'gitignore' and args.remainder[0] == 'on':
+        config = load_config()
+        config['gitignore'] = True
+        save_config(config)
+        print('Crowbar will create a .gitignore file when it creates a new environment folder')
+        return
+    
+    if args.command == 'gitignore' and args.remainder[0] == 'off':
+        config = load_config()
+        config['gitignore'] = False
+        save_config(config)
+        print('Crowbar will not create a .gitignore file when it creates a new environment folder')
+        return
+    
+    elif args.command == 'check' and args.remainder[0] == 'env':
+        directory = find_virtual_environment_directory()
+        config = load_config()
+        env_name = config.get('env_name', 'venv') 
+        if directory == None:
+            print('There is no environment folder found. Crowbar will install one in your current directory.')
+        else:
+            print(f"Crowbar found {env_name} at {directory}. If this is not the environment folder you would like to use, 'cb create env' will allow you to install one manually if it does not already exist.")
+        return
+    
+    elif args.command == 'show' and args.remainder[0] == 'gitignore':
+        config = load_config()
+        gitignore_status = config.get('gitignore', False)
+        if gitignore_status:
+            print('Crowbar gitignore: on')
+        else:
+            print('Crowbar gitignore: off')
+        return
+    
+    elif args.command == 'create' and args.remainder[0] == 'env':
+        env_exists = check_current_directory()
+        config = load_config()
+        env_name = config.get('env_name', 'venv')
+        gitignore_status = config.get('gitignore', False)
+        if not env_exists:
+            create_env_if_not_exists(env_name, gitignore_status)
+        else:
+            print(f'An environment folder already exists in the current directory.')
+        return
 
     env_directory = find_virtual_environment_directory()
-
     config = load_config()
-    env_name = config.get('env_name', 'venv')
+    env_name = config.get('env_name', 'venv')    
+    gitignore_status = config.get('gitignore', False)
 
     # To avoid creating a venv if cwd is in a subdirectory
     if args.command == 'install' and not args.remainder:
@@ -122,12 +194,21 @@ def main():
         if to_reset:
             env_directory = None
 
+    existing_commands = ['install', 'uninstall', 'run']
+
     if env_directory is None:
-        create_env_if_not_exists(env_name)
-        env_directory = os.getcwd()
-        print(f"Created environment {env_name} at {env_directory}")
+        if args.command in existing_commands:
+            create_env_if_not_exists(env_name, gitignore_status)
+            env_directory = os.getcwd()
+            print(f"Created environment {env_name} at {env_directory}")
+        else:
+            print("Unknown command.")
+            sys.exit(1)
     else:
-        print(f"Using environment {env_name} at {env_directory}")
+        if not args.global_run:
+            print(f"Using environment {env_name} at {env_directory}")
+        else:
+            print('**global environment**')
 
     if args.command == 'install':
         install_packages(env_directory, env_name, args.remainder, args.global_run)
