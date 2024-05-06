@@ -60,7 +60,7 @@ def update_gitignore(dir_name):
     else:
         with open(gitignore_path, 'w') as file:
             file.write(f'{dir_name}\n')
-            print(f"Created {gitignore_path} and added '{dir_name}'")
+            print(f"Created .gitignore and added '{dir_name}'")
 
 def create_env_if_not_exists(env_name, gitignore_status):
     if not os.path.isdir(env_name):
@@ -200,7 +200,6 @@ def main():
         if args.command in existing_commands:
             create_env_if_not_exists(env_name, gitignore_status)
             env_directory = os.getcwd()
-            print(f"Created environment {env_name} at {env_directory}")
         else:
             print("Unknown command.")
             sys.exit(1)
