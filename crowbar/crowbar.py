@@ -16,7 +16,7 @@ def load_config():
     config_dir = appdirs.user_data_dir(appname='crowbar', appauthor=False)
     config_path = os.path.join(config_dir, 'cbconfig.toml')
     if not os.path.exists(config_path):
-        return {'env_name': 'venv', 'gitignore': False}
+        return {'env_name': 'venv', 'gitignore': True}
     with open(config_path, 'r') as config_file:
         return toml.load(config_file)
 
@@ -113,6 +113,17 @@ def update_requirements(env_directory, env_name):
     with open(requirements_file_path, 'w') as requirements_file:
         subprocess.run([pip_path, 'freeze'], stdout=requirements_file, check=True)
 
+def show_gitignore(config):
+    gitignore_status = config.get('gitignore')
+    if gitignore_status:
+        print('Gitignore status: on')
+    else:
+        print('Gitignore status: off')
+
+def show_name(config):
+    env_name = config.get('env_name')
+    print(f'Environment name: {env_name}')
+
 def main():
     args = parse_arguments()
 
@@ -126,10 +137,7 @@ def main():
     
     if args.command == 'show' and args.remainder[0] == 'name':
         config = load_config()
-        try:
-            print(f'Environment name: {config["env_name"]}')
-        except:
-            print('Environment name: venv')
+        show_name(config)
         return
     
     if args.command == 'gitignore' and args.remainder[0] == 'on':
@@ -158,18 +166,20 @@ def main():
     
     elif args.command == 'show' and args.remainder[0] == 'gitignore':
         config = load_config()
-        gitignore_status = config.get('gitignore', False)
-        if gitignore_status:
-            print('Crowbar gitignore: on')
-        else:
-            print('Crowbar gitignore: off')
+        show_gitignore(config)
+        return
+    
+    elif args.command == 'show' and args.remainder[0] == 'config':
+        config = load_config()
+        show_gitignore(config)
+        show_name(config)
         return
     
     elif args.command == 'create' and args.remainder[0] == 'env':
         env_exists = check_current_directory()
         config = load_config()
         env_name = config.get('env_name', 'venv')
-        gitignore_status = config.get('gitignore', False)
+        gitignore_status = config.get('gitignore', True)
         if not env_exists:
             create_env_if_not_exists(env_name, gitignore_status)
         else:
@@ -179,7 +189,7 @@ def main():
     env_directory = find_virtual_environment_directory()
     config = load_config()
     env_name = config.get('env_name', 'venv')    
-    gitignore_status = config.get('gitignore', False)
+    gitignore_status = config.get('gitignore', True)
 
     # To avoid creating a venv if cwd is in a subdirectory
     if args.command == 'install' and not args.remainder:

@@ -50,17 +50,17 @@ crowbar create env
 ```
 crowbar show gitignore
 ```
--Indicates whether Crowbar is set to create a .gitignore file when it creates an environment folder (default is not to create .gitignore)
+-Indicates whether Crowbar is set to create a .gitignore file when it creates an environment folder (default is to create .gitignore)
 
 ```
 crowbar gitignore on
 ```
--Instructs Crowbar to create a .gitignore file when it creates an environment folder and add the name of that folder to the .gitignore file
+-Instructs Crowbar to create a .gitignore file when it creates an environment folder and add the name of that folder to the .gitignore file (this is the default)
 
 ```
 crowbar gitignore off
 ```
--Instructs Crowbar not to create a .gitignore file when it creates an environment folder (this is the default)
+-Instructs Crowbar not to create a .gitignore file when it creates an environment folder
 
 Warning – you may have pip muscle memory which may cause you to accidentally install globally. Use crowbar/cb and not pip if you are not in an active virtual environment.
 
