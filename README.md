@@ -62,6 +62,11 @@ crowbar gitignore off
 ```
 -Instructs Crowbar not to create a .gitignore file when it creates an environment folder
 
+```
+crowbar show config
+```
+-Lists all current configurable settings (environment folder name and gitignore on/off)
+
 Warning – you may have pip muscle memory which may cause you to accidentally install globally. Use crowbar/cb and not pip if you are not in an active virtual environment.
 
 <br>
