@@ -223,8 +223,6 @@ def main():
         install_packages(env_directory, env_name, args.remainder, args.global_run)
     elif args.command == 'uninstall':
         uninstall_packages(env_directory, env_name, args.remainder, args.global_run)
-    elif args.command == 'run':
-        run_external_command(env_directory, env_name, args.remainder[0], args.remainder[1:], args.global_run)
     elif args.command:
         run_external_command(env_directory, env_name, args.command, args.remainder, args.global_run)
     else:

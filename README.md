@@ -1,4 +1,61 @@
-## crowbar
+# crowbar
+
+<br>
+
+## what is it?
+
+Crowbar is a tool for managing your dependencies in Python projects. Inspired by tools like NPM in the JavaScript ecosystem, it installs your dependencies with your project and frees you from the need to think about virtual environments or keep track of your dependencies yourself.
+
+<br>
+
+## who is it for?
+
+Crowbar is for any Python developer, but it works especially well with someone who uses the vanilla path of dependency management (pip, venv, requirements.txt) and wants to automate some of this workflow.
+
+It's probably not for you if you're deeply embedded in an alternate ecosystem like Conda.
+
+<br>
+
+## how do I use it?
+
+I'll walk you through the steps of starting a Django project, so you can get a feel for the crowbar mental model.
+
+First, install crowbar:
+
+```
+pip install crowbar-package-manager
+```
+
+Create and/or enter your project directory and then use crowbar to install Django:
+
+```
+crowbar install django
+```
+
+Note: any instance of ```crowbar``` can be replaced with ```cb```
+
+```crowbar install <package name>``` uses pip to install your package to a virtual environment folder (named venv by default), records it to requirements.txt, and creates a .gitignore file with venv listed.
+
+Start a new Django project:
+
+```
+crowbar django-admin startproject project_name .
+```
+Notice that we didn't need to activate a virtual environment - using ```crowbar``` before your command means that it runs using the dependencies in your venv folder automatically.
+
+Run the Django development server:
+
+```
+crowbar manage.py runserver
+```
+
+You can also use ```crowbar``` to run a Python file, so in this case you don't put ```python``` before ```manage.py```
+
+
+<br>
+
+
+## commands
 
 Note: any instance of ```crowbar``` can be replaced with ```cb```
 
@@ -23,7 +80,7 @@ crowbar install
 -Installs all packages listed in requirements.txt
 
 ```
-crowbar run <file_name>.py
+crowbar <file_name>.py
 ```
 -Runs a python file using the contents of the local venv
 
@@ -90,15 +147,13 @@ With the crowbar command you can run any commands installed in the virtual envir
 Example - starting a new Django project:
 
 ```
-cb django-admin startproject django_project .
+cb django-admin startproject project_name .
 ```
 
-Use ```crowbar run``` to run any commands surfaced by files within your Python program.
-
-Example - running the Django development server:
+Running the Django development server:
 
 ```
-cb run manage.py runserver
+cb manage.py runserver
 ```
 
 <br>
