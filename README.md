@@ -54,6 +54,17 @@ You can also use ```crowbar``` to run a Python file, so in this case you don't p
 
 <br>
 
+## how does it work?
+
+Crowbar uese pip and venv under the hood. It essentially runs the same commands that you would, but automates the process.
+
+It is worth explaining how crowbar finds the nearest environment folder. It does this by looking for an environment folder at the current directory and progressively looking in higher directories until it finds an environment folder or reaches the root directory. The name of the environment folder it looks for can be changed by the user, but defaults to venv.
+
+The benefit of this search is that you can run crowbar commands from anywhere within your project as long as your dependencies are stored in the main directory of your project.
+
+There is a potential problem though if you have an environment folder in a directory above your current directory. For example, if you have a venv folder on your desktop and then you create a project on your desktop named my_project, enter that directory and type ```crowbar install pandas```, pandas will be installed in the venv folder on your desktop.
+
+If you are concerned that this might be a problem for you, you can simply run ```crowbar check env``` to see if crowbar can detect any environment folders at your current directory or above and, if you find any that you want to avoid installing packages to, you can run ```crowbar create env``` to force crowbar to create a new environment folder in your current directory.
 
 ## commands
 
